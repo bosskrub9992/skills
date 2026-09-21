@@ -134,7 +134,7 @@ only thing that resets `ref`:
 npx skills add "<url>" <scope-flag> -s <name> -a <agents> -y
 ```
 
-*Why it matters:* `skill_origin.py --all` flags these as `pinned-ref` (any
+*Why it matters:* `skill_origin.py --all` flags these as `pinned-to-branch` (any
 entry whose `ref` is set and ≠ the source's default branch). That audit catches
 both a forgotten PR/MR and a forgotten post-merge re-add.
 

@@ -19,7 +19,7 @@ installed and upstream counts per source.
   `-s`. `npx skills add <url> -l` shows what a repo offers.
 - **A skill deleted or renamed upstream stays installed** under its old name.
   `update` run by an agent never removes it. `skill_origin.py --all` reports
-  it as `deleted`, with a rename hint when one exists.
+  it as `gone-upstream`, with a rename hint when one exists.
 - **Do not use the lock hash to detect local edits.** For GitHub sources it is
   a git tree SHA and never matches the installed folder. `skill_origin.py`
   compares file contents instead, when there is a clone to compare against
@@ -35,7 +35,7 @@ npx skills add <url> <scope-flag> -s <name> <name2> -a <agents> -y
 `-s` and `-a` take several space-separated values. Check
 `skill_origin.py --all` § Name collisions first: a name another source already
 provides is replaced without a warning. A new source also needs a `read-only`
-entry in the config, or the health report shows its skills as `no-source`.
+entry in the config, or the health report shows its skills as `source-not-configured`.
 
 ## Flow: upgrade a public repo
 
@@ -43,14 +43,14 @@ When a public repo announces a release:
 
 1. `npx skills add <url> -l` to see what the repo offers now, and
    `skill_origin.py --all` to see which of your installed skills from it are
-   `deleted` or `moved`.
+   `gone-upstream` or `moved-upstream`.
 2. Install the subset you want, one `-s` with names space-separated.
 3. Remove what vanished upstream or that you no longer want:
    `npx skills remove <name> <scope-flag> -y` (no `-a`; `cli-facts.md`).
    `update` will not do it.
 4. `npx skills update -g -y` or `npx skills update -p -y` to refresh everything
    that survived at that scope.
-5. `skill_origin.py --all`: nothing from that source is `deleted` or `moved`.
+5. `skill_origin.py --all`: nothing from that source is `gone-upstream` or `moved-upstream`.
 
 ## Flow: customise a read-only skill (fork it)
 

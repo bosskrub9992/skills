@@ -71,7 +71,7 @@ machine, not in this skill: `~/.config/manage-skill/sources.json`
 6. `init_config.py --check`, then `skill_origin.py --all`.
 
 Later changes — a new source, a moved clone — are edits to that same file:
-show the change, get a yes, then `init_config.py --check`. A `no-source` state
+show the change, get a yes, then `init_config.py --check`. A `source-not-configured` state
 in the health report means a lock entry's source is missing from the config.
 
 ## Routing rule

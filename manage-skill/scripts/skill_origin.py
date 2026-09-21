@@ -18,18 +18,21 @@ Scopes:
   only visible from that project's root; pass --project-dir from elsewhere.
 
 States in --all:
-  ok             upstream still has it at the same path; install matches
-  differs        installed folder differs from the default branch (you edited it,
-                 or upstream moved on; an update would overwrite it)
-  deleted        upstream no longer has it; a rename hint is shown when a
-                 similar name exists upstream
-  moved          upstream still has it, at a new path; the next update follows
-                 the move and re-points the lock entry
-  pinned-ref     lock entry points at a branch, not the default branch. If that
-                 branch merged and was deleted, updates stop for this skill.
-                 Fix: re-add from the default branch
-  no-compare     source without a local clone; nothing local to diff against
-  no-source      the lock's source is not in the config
+  in-sync                upstream still has it at the same path; install matches
+  out-of-sync            installed folder differs from the default branch (you
+                         edited it, or upstream moved on; an update would
+                         overwrite it)
+  gone-upstream          upstream no longer has it; a rename hint is shown when
+                         a similar name exists upstream
+  moved-upstream         upstream still has it, at a new path; the next update
+                         follows the move and re-points the lock entry
+  pinned-to-branch       lock entry points at a branch, not the default branch.
+                         If that branch merged and was deleted, updates stop
+                         for this skill. Fix: re-add from the default branch
+  not-compared           source without a local clone; nothing local to diff
+                         against
+  source-not-configured  the lock's source is not in the config
+  upstream-unreadable    the source's remote could not be read
 
 Read-only. This script never writes anything. It reports; you decide, and the
 skills CLI does the work. What to do about each state: references/health.md.
@@ -222,14 +225,14 @@ def analyse_all(cfg, scopes):
                 row = {"skill": name, "scope": scope.name, "source": src["name"],
                        "policy": src["policy"], "ref": e.get("ref") or "",
                        "updated_at": (e.get("updatedAt") or "")[:10],
-                       "state": "ok", "detail": ""}
+                       "state": "in-sync", "detail": ""}
                 if is_pinned(src, e):
-                    row["state"], row["detail"] = "pinned-ref", "ref=%s" % e["ref"]
+                    row["state"], row["detail"] = "pinned-to-branch", "ref=%s" % e["ref"]
                 elif upstream is None:
-                    row["state"], row["detail"] = "unknown", "upstream unreadable"
+                    row["state"], row["detail"] = "upstream-unreadable", "remote could not be read"
                 elif name not in upstream:
                     hints = closest_names(name, set(upstream) - {name})
-                    row["state"] = "deleted"
+                    row["state"] = "gone-upstream"
                     if hints:
                         shown = ["%s%s" % (h, " (already installed)"
                                            if h in scope.lock else "") for h in hints]
@@ -237,16 +240,16 @@ def analyse_all(cfg, scopes):
                     else:
                         row["detail"] = "not upstream"
                 elif e.get("skillPath") and upstream[name] != e["skillPath"]:
-                    row["state"] = "moved"
+                    row["state"] = "moved-upstream"
                     row["detail"] = "%s -> %s" % (e["skillPath"], upstream[name])
                 else:
                     diff, note = diff_against_default(scope, src, name, e.get("skillPath"))
                     if diff is None:
-                        row["state"] = "no-compare"
+                        row["state"] = "not-compared"
                         row["detail"] = ("read-only, not compared"
                                          if src["policy"] == READ_ONLY else note)
                     elif has_changes(diff):
-                        row["state"] = "differs"
+                        row["state"] = "out-of-sync"
                         row["detail"] = "%d changed, %d only local, %d only upstream" % (
                             len(diff["modified"]), len(diff["added"]), len(diff["removed"]))
                 rows.append(row)
@@ -260,7 +263,7 @@ def analyse_all(cfg, scopes):
             rows.append({"skill": name, "scope": scope.name, "source": entry_url(e),
                          "policy": "unknown", "ref": e.get("ref") or "",
                          "updated_at": (e.get("updatedAt") or "")[:10],
-                         "state": "no-source",
+                         "state": "source-not-configured",
                          "detail": "add this source to the config"})
 
     collisions = []
@@ -317,9 +320,9 @@ def print_all(cfg, scopes, sources, rows, collisions, orphans, external):
                  s["upstream"] if s["upstream"] is not None else "?", state))
     print()
 
-    print("%-34s %-8s %-24s %-12s %s" % ("SKILL", "SCOPE", "SOURCE", "STATE", "DETAIL"))
+    print("%-34s %-8s %-24s %-22s %s" % ("SKILL", "SCOPE", "SOURCE", "STATE", "DETAIL"))
     for r in rows:
-        print("%-34s %-8s %-24s %-12s %s"
+        print("%-34s %-8s %-24s %-22s %s"
               % (r["skill"], r["scope"], r["source"], r["state"], r["detail"]))
     print()
 
@@ -328,8 +331,9 @@ def print_all(cfg, scopes, sources, rows, collisions, orphans, external):
         counts[r["state"]] = counts.get(r["state"], 0) + 1
     print("%d locked skills: %s" % (len(rows), ", ".join(
         "%d %s" % (counts[k], k) for k in sorted(counts)) or "none"))
-    attention = [k for k in ("deleted", "moved", "pinned-ref", "differs",
-                             "no-source", "unknown") if counts.get(k)]
+    attention = [k for k in ("gone-upstream", "moved-upstream", "pinned-to-branch",
+                             "out-of-sync", "source-not-configured",
+                             "upstream-unreadable") if counts.get(k)]
     if attention:
         print("states needing a decision: %s. What each one means and how to act: "
               "references/health.md" % ", ".join(attention))

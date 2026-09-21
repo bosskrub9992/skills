@@ -21,14 +21,14 @@ like an old version, or monthly.
 
 | State | Meaning | What to do |
 |---|---|---|
-| `ok` | upstream still has it at the same path and the install matches | nothing |
-| `differs` | installed folder differs from the default branch | `skill_origin.py <skill>` lists the files. Either someone edited the install (move the edit into the clone, see the policy file) or upstream moved on (`npx skills update <skill> -g\|-p -y`). Either way an update overwrites the install. |
-| `deleted` | upstream no longer has it | Usually a rename; the detail names the likely new name and says whether it is already installed. Install the new name if not, then `npx skills remove <old> <scope-flag> -y`. `update` never removes it when an agent runs it. |
-| `moved` | upstream still has it, at a new path | The next `update` of that scope follows the move and re-points the lock entry. Run it. |
-| `pinned-ref` | lock entry points at a branch, not the default branch | Expected on the skills a `branch-then-review` branch touches while it is in review. Once it is merged, re-add every `pinned-ref` name from the default branch (`branch-then-review.md`). If you forgot, updates have been skipping these skills. |
-| `no-compare` | source has no clone to diff against | nothing; updates keep it current |
-| `no-source` | the lock's source URL is not in the config | add the source with its policy (SKILL.md § First run), or remove the skill |
-| `unknown` | the source's remote could not be read | fix access or the URL / `default_branch` in the config; the SOURCES block prints the error |
+| `in-sync` | upstream still has it at the same path and the install matches | nothing |
+| `out-of-sync` | installed folder differs from the default branch | `skill_origin.py <skill>` lists the files. Either someone edited the install (move the edit into the clone, see the policy file) or upstream moved on (`npx skills update <skill> -g\|-p -y`). Either way an update overwrites the install. |
+| `gone-upstream` | upstream no longer has it | Usually a rename; the detail names the likely new name and says whether it is already installed. Install the new name if not, then `npx skills remove <old> <scope-flag> -y`. `update` never removes it when an agent runs it. |
+| `moved-upstream` | upstream still has it, at a new path | The next `update` of that scope follows the move and re-points the lock entry. Run it. |
+| `pinned-to-branch` | lock entry points at a branch, not the default branch | Expected on the skills a `branch-then-review` branch touches while it is in review. Once it is merged, re-add every `pinned-to-branch` name from the default branch (`branch-then-review.md`). If you forgot, updates have been skipping these skills. |
+| `not-compared` | source has no clone to diff against | nothing; updates keep it current |
+| `source-not-configured` | the lock's source URL is not in the config | add the source with its policy (SKILL.md § First run), or remove the skill |
+| `upstream-unreadable` | the source's remote could not be read | fix access or the URL / `default_branch` in the config; the SOURCES block prints the error |
 
 The SOURCES block also reports each clone: on a non-default branch, behind,
 ahead (committed but unpushed — the CLI cannot see it), or dirty.

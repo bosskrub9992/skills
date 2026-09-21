@@ -17,7 +17,7 @@ git host.
 > skill **stops updating** — at global scope without even a failing exit code
 > (`cli-facts.md`). Re-add every skill you installed from the branch from the
 > default branch after every merge. `skill_origin.py --all` flags each one as
-> `pinned-ref`, so a forgotten re-add is always visible.
+> `pinned-to-branch`, so a forgotten re-add is always visible.
 
 > ## The other rule: install what the branch touches, not what its title says
 >
@@ -73,7 +73,7 @@ Read `clone`, `url` and `default_branch` for the source before starting.
    ```
    Only the `#branch` suffix works as a ref (`cli-facts.md`). Each lock entry
    now carries `ref: <branch>`; `skill_origin.py --all` must list exactly
-   those names as `pinned-ref`.
+   those names as `pinned-to-branch`.
 7. Iterate: edit, commit, push, then repeat step 6 with the same list, without
    re-asking.
 8. Open the PR/MR against the default branch — **ask first, always**; neither
@@ -81,12 +81,12 @@ Read `clone`, `url` and `default_branch` for the source before starting.
    one.
 9. **After the merge, mandatory.** Re-add from the default branch to clear the
    pinned ref. The list is every skill the diff touched plus any other
-   `pinned-ref` skill from this source:
+   `pinned-to-branch` skill from this source:
    ```bash
    git -C <clone> switch <default_branch> && git -C <clone> pull --ff-only
-   python3 <skill-dir>/scripts/skill_origin.py --all          # note the pinned-ref rows
+   python3 <skill-dir>/scripts/skill_origin.py --all          # note the pinned-to-branch rows
    npx skills add "<url>" <scope-flag> -s <name> <sibling> ... -a <agents> -y
-   python3 <skill-dir>/scripts/skill_origin.py --all          # no pinned-ref rows left
+   python3 <skill-dir>/scripts/skill_origin.py --all          # no pinned-to-branch rows left
    ```
 
 ## Flow: install an existing PR/MR branch
