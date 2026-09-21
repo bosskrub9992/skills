@@ -1,0 +1,212 @@
+{
+  "skill_name": "manage-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to change the grafana skill, where do I edit? Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Says to run scripts/skill_origin.py grafana first, explains that its output names the scope, the source repo, its policy and the clone path, and directs the edit into that clone. Never suggests editing the installed folder under .agents/skills or an agent's own skills folder.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Tells the user to run skill_origin.py on the grafana skill as the first step",
+          "type": "contains",
+          "value": "skill_origin.py"
+        },
+        "Explains that the skill_origin.py output identifies the scope, the source repo, its policy, and the clone path where the edit belongs",
+        "Directs the edit into the source clone, not into the installed folder",
+        "Does not suggest editing the installed skill folder directly as the way to change the skill"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Fix a typo in my be-honest skill. `skill_origin.py be-honest` printed: scope project (CLI flag: none); source my-skills [direct-push]; source url git@example.com:me/my-skills.git; ref (default branch); clone /work/my-skills; agents (-a) agent-a agent-b; result CLEAN. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Edit be-honest inside the clone /work/my-skills, validate with npx skills add /work/my-skills -l, ask the loop-approval question, commit and push the default branch, then refresh with npx skills update be-honest -p -y from the project root, and verify with skill_origin.py be-honest. No feature branch, no PR.",
+      "files": [],
+      "expectations": [
+        "Says to edit the be-honest folder inside the clone /work/my-skills, not the installed copy",
+        "Says to commit and push the default branch directly, after asking the user whether to approve the commit-push-reinstall loop or gate each step",
+        {
+          "text": "Refreshes the project-scope install with update and the -p flag",
+          "type": "regex",
+          "value": "skills update[^\\n]*-p"
+        },
+        "Does not use the -g flag for this project-scope skill",
+        "Does not tell the user to create a feature branch or open a pull/merge request"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Add a new skill called release-notes-writer to my my-skills repo (direct-push, clone /work/my-skills, url git@example.com:me/my-skills.git, its other skills are installed globally, agents agent-a agent-b). Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Create release-notes-writer/SKILL.md in the clone with name: and description: frontmatter where name equals the folder name, add the index row if the repo keeps one, validate with npx skills add /work/my-skills -l, commit and push the default branch, then install once with npx skills add git@example.com:me/my-skills.git -g -s release-notes-writer -a agent-a agent-b -y because update never adds a new skill.",
+      "files": [],
+      "expectations": [
+        "Says SKILL.md needs name: and description: frontmatter and that name must equal the folder name",
+        "Says to validate with npx skills add <clone> -l before pushing",
+        "Says to commit and push the default branch (no branch or PR)",
+        {
+          "text": "Installs the new skill by name, globally",
+          "type": "regex",
+          "value": "skills add[^`\\n]*-g[^`\\n]*-s release-notes-writer|skills add[^`\\n]*-s release-notes-writer[^`\\n]*-g"
+        },
+        "States that npx skills update never installs a new upstream skill, which is why the explicit add is required"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Add a gotcha to the o11y skill. `skill_origin.py o11y` printed: scope global (CLI flag: -g); source team-skills [branch-then-review]; source url https://git.example.com/team/team-skills.git; ref (default branch); clone /work/team-skills; default branch main; agents (-a) agent-a agent-b. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Sync the clone to main, create a branch, edit the o11y skill folder, validate, ask the loop question, commit and push the branch, install from the branch with the #branch suffix and -g, open a PR/MR against main after asking, and after the merge re-add from the default branch to clear the pinned ref.",
+      "files": [],
+      "expectations": [
+        "Says to sync the clone to the default branch (main) before creating a branch",
+        "Says to make the edit on a new git branch and push that branch, then open a pull/merge request against main, asking the user before opening it",
+        {
+          "text": "Shows a branch install command using the #<branch> suffix on the repo URL",
+          "type": "regex",
+          "value": "team-skills\\.git#\\S+"
+        },
+        "Says that after the merge the skill must be re-added from the default branch to clear the pinned ref",
+        "Does not tell the user to push directly to main"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "My skills PR got merged and the branch was deleted. The skill (deploy-sop, global, from team-skills) was installed from that branch while in review. Anything left? Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Yes: the lock entry is pinned to the deleted branch, so updates skip the skill (at global scope without even a failing exit code). Re-add it from the default branch with npx skills add <url> -g -s deploy-sop -a <agents> -y, plus any other pinned-ref skill from that source, then confirm with skill_origin.py that no pinned-ref remains.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Says to re-add the skill with npx skills add from the default branch",
+          "type": "regex",
+          "value": "skills add[^\\n]*deploy-sop"
+        },
+        "Explains that the lock entry is pinned to the branch ref and that once the branch is deleted, updates stop refreshing the skill",
+        {
+          "text": "Says to verify with skill_origin.py that the pinned ref is cleared",
+          "type": "contains",
+          "value": "skill_origin.py"
+        },
+        "Does not say nothing is left to do"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Tweak the wizard skill. `skill_origin.py wizard` printed: scope project; source public-skills [read-only]; clone (none). I also have a direct-push source my-skills (clone /work/my-skills, url git@example.com:me/my-skills.git). Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Refuses to edit the installed folder because the source is read-only. Fork: copy the installed wizard folder into /work/my-skills under a new name, set name: and description:, push the default branch, npx skills add git@example.com:me/my-skills.git -s <new-name> -a <agents> -y at project scope, then remove the original with npx skills remove wizard -y (no -a list), verify, and start a new agent session.",
+      "files": [],
+      "expectations": [
+        "Refuses to edit the installed wizard folder in place, explaining that an update would overwrite it",
+        "Says to copy the skill into the my-skills clone under a new name, not the same name wizard",
+        "Explains the reason for a new name: lock entries are keyed by name so a same-named fork would fight with the original",
+        {
+          "text": "Removes the original with npx skills remove",
+          "type": "regex",
+          "value": "skills remove[^\\n]*wizard"
+        },
+        "The remove command does not pass an -a agent list, or the answer explains that passing -a leaves the files and lock entry behind",
+        "Says to start a new agent session afterwards"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Install the retro skill from https://github.com/some-author/skills. My config agents are agent-a agent-b. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "First list what the repo offers with npx skills add https://github.com/some-author/skills -l, check skill_origin.py --all for a name collision, settle the scope (asks, or follows where that source's other skills live), then install with one -s and one -a: npx skills add <url> <scope-flag> -s retro -a agent-a agent-b -y, and add a read-only entry for the source to the config.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Lists the repo contents first with the -l flag before installing",
+          "type": "regex",
+          "value": "skills add[^\\n]*\\s-l(\\s|`|$)"
+        },
+        {
+          "text": "Install command uses -s retro and the configured agents",
+          "type": "regex",
+          "value": "skills add[^\\n]*-s retro[^\\n]*-a agent-a agent-b"
+        },
+        "Addresses which scope (project or global) to install at, by asking or by stating the rule used, instead of silently assuming one",
+        "Mentions checking for a name collision before installing, or adding the new source to the config as read-only"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "The acme-cli skill looks outdated. `skill_origin.py acme-cli` printed: policy externally-managed; placed by acme binary (acme skills install); refresh with: acme upgrade. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "acme-cli is externally managed by the acme binary; refresh it with acme upgrade. Do not use npx skills add/update/remove on it. It has no lock entry by design and is not an orphan, so do not delete it.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Says to refresh with acme upgrade",
+          "type": "contains",
+          "value": "acme upgrade"
+        },
+        "Says explicitly not to use npx skills add, update, or remove on acme-cli",
+        "Says the missing lock entry is by design and that acme-cli is not an orphan and should not be deleted"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "skill_origin.py --all says deploy_sop (global) is deleted upstream and renamed to deploy-sop, which is already installed. What do I do? Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Remove the old name: npx skills remove deploy_sop -g -y (no -a list), verify with skill_origin.py deploy_sop that it is no longer installed, and start a new agent session so the old description leaves the routing table. Update will not remove it when run by an agent.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Removes deploy_sop with npx skills remove at global scope",
+          "type": "regex",
+          "value": "skills remove[^\\n]*deploy_sop[^\\n]*-g|skills remove[^\\n]*-g[^\\n]*deploy_sop"
+        },
+        "The remove command does not pass an -a agent list",
+        "Says to verify the removal afterwards",
+        "Says to start a new agent session afterwards so the old description stops loading",
+        "Does not tell the user to run npx skills update as the way to remove the old skill"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "I just installed manage-skill on a new laptop. I ran skill_origin.py --all and it exited with code 3 saying there is no config. What now? Do not run anything; tell me the exact steps.",
+      "expected_output": "Explains this is the first run: the config lives at ~/.config/manage-skill/sources.json and must be created with the user. Run init_config.py --discover from the project root, then for each source ask whether the user can push and whether the default branch is protected (read-only / direct-push / branch-then-review), ask for clone paths, the agents, and who owns each unlocked folder, show the JSON, get a yes, pipe to init_config.py --write, then --check and skill_origin.py --all.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Says to run init_config.py --discover",
+          "type": "regex",
+          "value": "init_config\\.py[^\\n]*--discover"
+        },
+        "Says the policy for each source is decided by asking the user (can you push; is the default branch protected or reviewed), not guessed",
+        {
+          "text": "Writes the config through init_config.py --write after the user confirms",
+          "type": "regex",
+          "value": "init_config\\.py[^\\n]*--write"
+        },
+        "Names the config location ~/.config/manage-skill/sources.json or the MANAGE_SKILL_CONFIG override",
+        "Does not invent sources, clone paths or policies on the user's behalf"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "I'm in my project folder, which has a skills-lock.json. I also have global skills. Give me the one command that refreshes all my global skills. Do not run anything.",
+      "expected_output": "npx skills update -g -y. Explains that the scope flag is required: a bare npx skills update run non-interactively in a folder with project skills updates the project scope only, without saying so.",
+      "files": [],
+      "expectations": [
+        {
+          "text": "Gives npx skills update with the -g flag",
+          "type": "regex",
+          "value": "skills update[^\\n]*-g"
+        },
+        "Explains that without -g or -p the CLI picks a scope on its own (project here), so the flag must always be passed"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "skill_origin.py --all lists tdd under NAME COLLISIONS: installed from public-skills; scope global+project. Is that a problem, and what do I do? Do not run anything.",
+      "expected_output": "Yes: the same name is installed at both scopes, so two copies load and can drift. The user should choose which scope to keep; remove the other with npx skills remove tdd (with -g for the global one, no flag from the project root for the project one), without an -a list, then verify and start a new agent session. The agent does not pick for the user.",
+      "files": [],
+      "expectations": [
+        "Explains that the skill is installed at both project and global scope and therefore loads twice",
+        "Leaves the choice of which install to keep to the user instead of picking one",
+        {
+          "text": "Shows the remove command for tdd",
+          "type": "regex",
+          "value": "skills remove[^\\n]*tdd"
+        }
+      ]
+    }
+  ]
+}

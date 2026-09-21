@@ -1,0 +1,32 @@
+{
+  "agents": ["<agent-id>", "<agent-id>"],
+  "agent_skill_dirs": [".<agent>/skills"],
+  "sources": [
+    {
+      "name": "my-skills",
+      "policy": "direct-push",
+      "url": "git@<host>:<owner>/<repo>.git",
+      "clone": "<absolute path to your clone of that repo>",
+      "default_branch": "main"
+    },
+    {
+      "name": "team-skills",
+      "policy": "branch-then-review",
+      "url": "https://<host>/<owner>/<repo>.git",
+      "clone": "<absolute path to your clone of that repo>",
+      "default_branch": "main"
+    },
+    {
+      "name": "some-public-repo",
+      "policy": "read-only",
+      "url": "https://github.com/<owner>/<repo>.git",
+      "default_branch": null
+    },
+    {
+      "name": "<skill-name>",
+      "policy": "externally-managed",
+      "managed_by": "<the tool, or the person, that places this skill>",
+      "refresh": "<the command that refreshes it>"
+    }
+  ]
+}
