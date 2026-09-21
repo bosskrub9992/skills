@@ -72,7 +72,7 @@
     {
       "id": 5,
       "prompt": "My skills PR got merged and the branch was deleted. The skill (deploy-sop, global, from team-skills) was installed from that branch while in review. Anything left? Do not run anything; tell me the exact steps and commands.",
-      "expected_output": "Yes: the lock entry is pinned to the deleted branch, so updates skip the skill (at global scope without even a failing exit code). Re-add it from the default branch with npx skills add <url> -g -s deploy-sop -a <agents> -y, plus any other pinned-ref skill from that source, then confirm with skill_origin.py that no pinned-ref remains.",
+      "expected_output": "Yes: the lock entry is pinned to the deleted branch, so updates skip the skill (at global scope without even a failing exit code). Re-add it from the default branch with npx skills add <url> -g -s deploy-sop -a <agents> -y, plus any other pinned-to-branch skill from that source, then confirm with skill_origin.py that no pinned-to-branch remains.",
       "files": [],
       "expectations": [
         {
