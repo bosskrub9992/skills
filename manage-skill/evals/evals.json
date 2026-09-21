@@ -85,7 +85,8 @@
           "type": "contains",
           "value": "skill_origin.py"
         },
-        "Does not say nothing is left to do"
+        "Does not say nothing is left to do",
+        "The re-add command installs from the default branch: its URL carries no #branch suffix"
       ]
     },
     {
@@ -205,7 +206,8 @@
           "text": "Shows the remove command for tdd",
           "type": "regex",
           "value": "skills remove[^\\n]*tdd"
-        }
+        },
+        "The remove command does not pass an -a agent list"
       ]
     }
   ]
