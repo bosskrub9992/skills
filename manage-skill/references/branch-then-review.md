@@ -59,11 +59,12 @@ Read `clone`, `url` and `default_branch` for the source before starting.
    before committing. See `health.md`.
 4. Validate the CLI still parses it: `npx skills add <clone> -l`. The skill
    must be listed, with no `⚠ Skipped` line for it (`yaml-traps.md`).
-5. **Ask the loop question, then commit and push the branch.** Steps 5–7 are
-   one loop; before the first commit ask the user once whether to approve the
-   loop for this session or gate each step (SKILL.md § Approval). Name the
-   branch, the remote and the exact `-s` list in the question. Opening the
-   PR/MR (step 8) is never part of the grant.
+5. **Run the conflict check, then commit and push the branch.** Steps 5–7 are
+   one loop. Before the first commit check the source's `autonomy`, the
+   clone's convention files and the session's instructions (SKILL.md §
+   Autonomy). No conflict: name the branch, the remote and the exact `-s` list
+   in one line and go. Conflict: ask once for the loop, quoting the rule.
+   Opening the PR/MR (step 8) is never covered either way.
 6. **Install from the branch — every skill the diff touches.** This is the
    only way the CLI sees an unmerged change. Get the names from the diff (rule
    above), not from the PR/MR title:
@@ -73,10 +74,10 @@ Read `clone`, `url` and `default_branch` for the source before starting.
    Only the `#branch` suffix works as a ref (`cli-facts.md`). Each lock entry
    now carries `ref: <branch>`; `skill_origin.py --all` must list exactly
    those names as `pinned-ref`.
-7. Iterate: edit, commit, push, then repeat step 6 with the same list — under
-   the step 5 grant, without re-asking.
-8. Open the PR/MR against the default branch — **ask first, always**; the loop
-   grant does not cover it. Follow the repo's own conventions file if it has
+7. Iterate: edit, commit, push, then repeat step 6 with the same list, without
+   re-asking.
+8. Open the PR/MR against the default branch — **ask first, always**; neither
+   `autonomy: auto` nor a loop grant covers it. Follow the repo's own conventions file if it has
    one.
 9. **After the merge, mandatory.** Re-add from the default branch to clear the
    pinned ref. The list is every skill the diff touched plus any other

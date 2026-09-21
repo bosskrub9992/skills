@@ -15,6 +15,10 @@ BRANCH_THEN_REVIEW = "branch-then-review"
 POLICIES = (READ_ONLY, DIRECT_PUSH, BRANCH_THEN_REVIEW, EXTERNAL)
 EDITABLE = (DIRECT_PUSH, BRANCH_THEN_REVIEW)
 
+AUTONOMY_AUTO = "auto"
+AUTONOMY_ASK = "ask"
+AUTONOMY = (AUTONOMY_AUTO, AUTONOMY_ASK)
+
 SCOPES = ("project", "global")
 EXIT_NO_CONFIG = 3
 
@@ -100,6 +104,9 @@ def validate_config(cfg):
             continue
         if not src.get("url"):
             problems.append("%s: `url` is required" % label)
+        if src.get("autonomy", AUTONOMY_AUTO) not in AUTONOMY:
+            problems.append("%s: `autonomy` must be one of %s"
+                            % (label, ", ".join(AUTONOMY)))
         if policy in EDITABLE:
             if not src.get("clone"):
                 problems.append("%s: policy %s needs a `clone` path" % (label, policy))
@@ -132,6 +139,7 @@ def load_config(path=None):
             src.setdefault("clone", None)
             continue
         src.setdefault("default_branch", None)
+        src.setdefault("autonomy", AUTONOMY_AUTO)
         clone = src.get("clone")
         src["clone"] = os.path.abspath(os.path.expanduser(clone)) if clone else None
         src["key"] = canonical_url(src["url"])

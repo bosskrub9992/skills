@@ -15,10 +15,12 @@ scope flag and the `-a` agents.
    before committing. See `health.md`.
 3. Validate the CLI still parses it: `npx skills add <clone> -l`. The skill
    must be listed, with no `⚠ Skipped` line for it (`yaml-traps.md`).
-4. **Ask the loop question, then commit and push the default branch.** Steps
-   4–5 repeat per iteration; before the first commit ask the user once whether
-   to approve the loop for this session or gate each step (SKILL.md §
-   Approval). Say explicitly that the push lands on the default branch.
+4. **Run the conflict check, then commit and push the default branch.** Steps
+   4–5 repeat per iteration. Before the first commit check the source's
+   `autonomy`, the clone's convention files and the session's instructions
+   (SKILL.md § Autonomy). No conflict: say in one line what you are about to do
+   and do it. Conflict: ask once for the loop, quoting the rule, and say
+   explicitly that the push lands on the default branch.
 5. Refresh the install, naming the skill and the scope:
    ```bash
    npx skills update <name> -g -y        # global install
@@ -38,7 +40,7 @@ scope flag and the `-a` agents.
    name.
 2. Add the repo's index row if it keeps one.
 3. Validate (`npx skills add <clone> -l`), then commit and push the default
-   branch (loop question first, as in the edit flow).
+   branch (conflict check first, as in the edit flow).
 4. Install it once by name. `update` never adds a new skill. Pick the scope
    the source's other skills use, or ask:
    ```bash

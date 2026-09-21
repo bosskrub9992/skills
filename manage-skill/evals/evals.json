@@ -19,19 +19,20 @@
     },
     {
       "id": 2,
-      "prompt": "Fix a typo in my be-honest skill. `skill_origin.py be-honest` printed: scope project (CLI flag: none); source my-skills [direct-push]; source url git@example.com:me/my-skills.git; ref (default branch); clone /work/my-skills; agents (-a) agent-a agent-b; result CLEAN. Do not run anything; tell me the exact steps and commands.",
-      "expected_output": "Edit be-honest inside the clone /work/my-skills, validate with npx skills add /work/my-skills -l, ask the loop-approval question, commit and push the default branch, then refresh with npx skills update be-honest -p -y from the project root, and verify with skill_origin.py be-honest. No feature branch, no PR.",
+      "prompt": "Fix a typo in my be-honest skill. `skill_origin.py be-honest` printed: scope project (CLI flag: none); source my-skills [direct-push]; source url git@example.com:me/my-skills.git; ref (default branch); clone /work/my-skills; agents (-a) agent-a agent-b; result CLEAN; autonomy auto. The clone has no AGENTS.md, CLAUDE.md or CONTRIBUTING.md, and I have no rules of my own about commits or pushes. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Edit be-honest inside the clone /work/my-skills, validate with npx skills add /work/my-skills -l, run the conflict check (autonomy auto, no convention files, no session rule: no conflict), state in one line what will happen, then commit and push the default branch without asking for approval, refresh with npx skills update be-honest -p -y from the project root, and verify with skill_origin.py be-honest. No feature branch, no PR.",
       "files": [],
       "expectations": [
         "Says to edit the be-honest folder inside the clone /work/my-skills, not the installed copy",
-        "Says to commit and push the default branch directly, after asking the user whether to approve the commit-push-reinstall loop or gate each step",
+        "Says to commit and push the default branch directly, and treats this as a no-conflict case: it does not make commit or push wait on the user's approval",
         {
           "text": "Refreshes the project-scope install with update and the -p flag",
           "type": "regex",
           "value": "skills update[^\\n]*-p"
         },
         "Does not use the -g flag for this project-scope skill",
-        "Does not tell the user to create a feature branch or open a pull/merge request"
+        "Does not tell the user to create a feature branch or open a pull/merge request",
+        "Mentions checking for a convention/autonomy conflict before the first commit, or states why there is none here"
       ]
     },
     {
@@ -53,12 +54,12 @@
     },
     {
       "id": 4,
-      "prompt": "Add a gotcha to the o11y skill. `skill_origin.py o11y` printed: scope global (CLI flag: -g); source team-skills [branch-then-review]; source url https://git.example.com/team/team-skills.git; ref (default branch); clone /work/team-skills; default branch main; agents (-a) agent-a agent-b. Do not run anything; tell me the exact steps and commands.",
-      "expected_output": "Sync the clone to main, create a branch, edit the o11y skill folder, validate, ask the loop question, commit and push the branch, install from the branch with the #branch suffix and -g, open a PR/MR against main after asking, and after the merge re-add from the default branch to clear the pinned ref.",
+      "prompt": "Add a gotcha to the o11y skill. `skill_origin.py o11y` printed: scope global (CLI flag: -g); source team-skills [branch-then-review]; source url https://git.example.com/team/team-skills.git; ref (default branch); clone /work/team-skills; default branch main; agents (-a) agent-a agent-b; autonomy auto. The clone has no AGENTS.md, CLAUDE.md or CONTRIBUTING.md, and I have no rules of my own about commits or pushes. Do not run anything; tell me the exact steps and commands.",
+      "expected_output": "Sync the clone to main, create a branch, edit the o11y skill folder, validate, run the conflict check (none here), commit and push the branch without asking, install from the branch with the #branch suffix and -g, ask before opening the PR/MR against main, and after the merge re-add from the default branch to clear the pinned ref.",
       "files": [],
       "expectations": [
         "Says to sync the clone to the default branch (main) before creating a branch",
-        "Says to make the edit on a new git branch and push that branch, then open a pull/merge request against main, asking the user before opening it",
+        "Says to make the edit on a new git branch and push that branch without waiting for approval (no conflict here), then open a pull/merge request against main, asking the user before opening it",
         {
           "text": "Shows a branch install command using the #<branch> suffix on the repo URL",
           "type": "regex",
@@ -208,6 +209,34 @@
           "value": "skills remove[^\\n]*tdd"
         },
         "The remove command does not pass an -a agent list"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Fix a typo in my deploy-sop skill. `skill_origin.py deploy-sop` printed: scope global (CLI flag: -g); source ops-skills [direct-push]; autonomy auto; source url git@example.com:ops/ops-skills.git; clone /work/ops-skills; default branch main; agents (-a) agent-a agent-b; result CLEAN. The clone's AGENTS.md contains the line: \"Agents must never run git push without the maintainer's explicit approval.\" Do not run anything; tell me the exact steps and what you would ask me, if anything.",
+      "expected_output": "Recognises the AGENTS.md rule as a conflict even though autonomy is auto. Edits the clone, validates, then asks ONE question before the first commit, quoting the AGENTS.md rule and describing the whole loop (commit on main, push to origin main, reinstall/update -g), offering to approve the loop for the session or gate each step. Says the push lands on the default branch.",
+      "files": [],
+      "expectations": [
+        "Identifies the AGENTS.md rule as a conflict that requires asking, even though autonomy is auto",
+        "Quotes or clearly cites the AGENTS.md rule in the question it would ask",
+        "Asks once for the whole commit-push-reinstall loop (approve for the session, or gate each step) rather than planning a separate prompt at every step by default",
+        "Does not say it would commit and push without asking"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Reword the description of my standup-notes skill. `skill_origin.py standup-notes` printed: scope project (CLI flag: none); source my-skills [direct-push]; autonomy ask; source url git@example.com:me/my-skills.git; clone /work/my-skills; default branch main; agents (-a) agent-a agent-b; result CLEAN. The clone has no convention files. Do not run anything; tell me the exact steps and what you would ask me, if anything.",
+      "expected_output": "autonomy ask is itself the conflict: edits the clone, validates with -l, asks the loop question before the first commit (naming branch main, origin, the skill and the refresh command, and that it lands on the default branch), then commit, push, npx skills update standup-notes -p -y, verify; notes a description change needs a new agent session.",
+      "files": [],
+      "expectations": [
+        "Says it would ask the user before the first commit because the source's autonomy is ask",
+        "The question covers the whole loop (commit, push, reinstall) once, not a separate approval per step by default",
+        {
+          "text": "Refreshes the project-scope install with update and -p",
+          "type": "regex",
+          "value": "skills update[^\\n]*-p"
+        },
+        "Mentions that a description change only shows up in a new agent session"
       ]
     }
   ]

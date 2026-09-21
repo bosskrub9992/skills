@@ -5,6 +5,7 @@
     {
       "name": "my-skills",
       "policy": "direct-push",
+      "autonomy": "auto",
       "url": "git@<host>:<owner>/<repo>.git",
       "clone": "<absolute path to your clone of that repo>",
       "default_branch": "main"
@@ -12,6 +13,7 @@
     {
       "name": "team-skills",
       "policy": "branch-then-review",
+      "autonomy": "ask",
       "url": "https://<host>/<owner>/<repo>.git",
       "clone": "<absolute path to your clone of that repo>",
       "default_branch": "main"

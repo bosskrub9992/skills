@@ -55,7 +55,9 @@ machine, not in this skill: `~/.config/manage-skill/sources.json`
    - Yes → ask: **is its default branch protected, or do changes need
      review?** No → `direct-push`. Yes → `branch-then-review`. Both need the
      path of the user's clone; if there is none, offer to clone it (ask first)
-     and confirm `default_branch`.
+     and confirm `default_branch`. Then ask: **may I commit, push and
+     reinstall in this repo without asking each time?** Yes → `"autonomy":
+     "auto"`. No → `"autonomy": "ask"` (§ Autonomy).
 3. Ask which agents the user runs. That list is `agents`, passed as `-a` on
    every install (valid ids: `references/cli-facts.md`). `agent_skill_dirs`
    comes from the discovery output; confirm it.
@@ -93,8 +95,8 @@ rule.
 | Policy | When | Flow in one line | Detail |
 |---|---|---|---|
 | **`read-only`** | a repo you cannot push to | never edit; to customise, fork into a repo you own under a **new name**, then remove the original | `references/read-only.md` |
-| **`direct-push`** | your repo, default branch **not protected** | edit the clone → **loop question** → commit → push the default branch → update | `references/direct-push.md` |
-| **`branch-then-review`** | default branch **protected**, or changes need review | branch → **loop question** → push → install **every skill the diff touches** with `#branch` → open the PR/MR → **after merge, re-add the same list from the default branch** | `references/branch-then-review.md` |
+| **`direct-push`** | your repo, default branch **not protected** | edit the clone → **conflict check** → commit → push the default branch → update | `references/direct-push.md` |
+| **`branch-then-review`** | default branch **protected**, or changes need review | branch → **conflict check** → push → install **every skill the diff touches** with `#branch` → open the PR/MR → **after merge, re-add the same list from the default branch** | `references/branch-then-review.md` |
 | **`externally-managed`** | something other than the CLI places it | never touch it with `npx skills`; refresh through its owner | `references/externally-managed.md` |
 
 Lock entries are keyed by name alone, so two sources offering one name — or
@@ -105,31 +107,56 @@ For a **new** install, suggest the scope the source's other skills already use
 (`skill_origin.py --all` shows it). When that does not settle it, ask; a skill
 installed at the wrong scope is a skill nobody can find.
 
-## Approval: ask once for the loop, not once per step
+## Autonomy: act unless a rule says ask
 
-Repo conventions usually gate `git commit`, `git push` and PR/MR creation
-separately. Applied literally to `direct-push` and `branch-then-review`, that
-turns the sync loop — commit → push → reinstall from the remote, repeated per
-iteration — into three prompts per edit, and the loop is the whole point of
-installing through the CLI (git-versioned, agent-independent, never from a
-working tree). The conventions bind the agent, not the user, so the fix is to
-let the user decide the shape of the approval **before the first commit**, not
-to skip it:
+The sync loop — commit → push → reinstall from the remote, repeated per
+iteration — is the whole point of installing through the CLI (git-versioned,
+agent-independent, never from a working tree). Most skill repos have no rule
+against an agent running it, so stopping to ask at every step only slows the
+user down. Some repos, and some users, do gate commits and pushes. So before
+the **first commit** of an edit, check for a conflict, then act on the result.
 
-> This edit loops **commit on `<branch>` → push to `origin <branch>` →
-> `npx skills add "<url>#<branch>" <scope-flag> -s <names> -a <agents> -y`**,
-> repeated per iteration. Approve the loop for this session, or gate each step?
+**A conflict is any of these:**
+
+- The source's config entry says `"autonomy": "ask"` (`skill_origin.py <name>`
+  prints it). Absent or `"auto"` means the user is fine with the loop running.
+- A rule in the **source clone's** convention files gates `git commit`,
+  `git push` or branch creation, or demands something the loop does not do (a
+  ticket id in the message, signed commits, a named reviewer). Read what
+  exists: `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, the PR/MR template, any
+  agent rules file.
+- A rule in the **instructions active in this session** — the user's global
+  rules, or the project rules of the folder you are working in — does the same,
+  and the user has not already asked for the commit or push in this
+  conversation.
+
+**No conflict → just do it.** Say in one line what is about to happen — repo,
+branch, skill names, install command — then run commit, push and reinstall, and
+keep iterating without asking.
+
+**Conflict → ask once for the loop, not once per step**, quoting the rule that
+triggered it:
+
+> `<file>` says "<rule>". This edit loops **commit on `<branch>` → push to
+> `origin <branch>` → `npx skills add "<url>#<branch>" <scope-flag> -s <names>
+> -a <agents> -y`**, repeated per iteration. Approve the loop for this session,
+> or gate each step?
 
 - **Loop approved**: run all three per iteration without re-asking. The grant
   covers *this* repo and branch, *these* skill names, *this* session. A new
-  branch, repo or name re-asks.
+  branch, repo or name re-checks.
 - **Gate each step**: ask before every commit, push and reinstall.
-- **Never inside the grant**: opening the PR/MR (outward-facing — always its
-  own question), pushing a `branch-then-review` default branch, merging,
-  marking a PR/MR ready. For `direct-push` the loop *is* the default branch;
-  the question must say so.
-- A skill may not grant itself this; only the user's answer does. Do not
-  infer it from a previous session or an earlier "commit and push".
+- For `direct-push` the loop lands on the default branch; the question must
+  say so.
+
+**Always its own question, conflict or not:** opening a PR/MR (outward-facing),
+merging, marking a PR/MR ready, a force-push, and pushing the default branch of
+a `branch-then-review` source.
+
+**Stop and ask when the clone is not in the state the flow expects:** unrelated
+uncommitted changes, an unexpected branch, or unpushed commits you did not
+make. That is about not sweeping someone's work into your commit, not about
+convention.
 
 ## `local_preview.py`
 

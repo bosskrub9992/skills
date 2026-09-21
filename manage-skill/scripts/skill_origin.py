@@ -45,7 +45,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _skilllib import (  # noqa: E402
-    EXTERNAL, READ_ONLY, add_scope_args, classify_unlocked, clone_health,
+    EDITABLE, EXTERNAL, READ_ONLY, add_scope_args, classify_unlocked, clone_health,
     closest_names, compare, die, entry_url, export_from_clone, external_skills,
     git, git_sources, has_clone, load_config, lock_entries_for, remote_skills,
     resolve_in_clone, resolve_scopes, rmtree, source_for_entry,
@@ -95,6 +95,7 @@ def analyse_one(cfg, scope, name, entry):
         "scope_flag": scope.flag,
         "source": src["name"] if src else entry_url(entry),
         "policy": src["policy"] if src else "unknown",
+        "autonomy": src["autonomy"] if src and src["policy"] in EDITABLE else None,
         "source_url": entry_url(entry),
         "install_url": src["url"] if src else entry_url(entry),
         "source_type": entry.get("sourceType"),
@@ -131,6 +132,11 @@ def print_one(info):
     print("scope          : %s  (CLI flag: %s)"
           % (info["scope"], info["scope_flag"] or "none"))
     print("source         : %s  [%s]" % (info["source"], info["policy"]))
+    if info["autonomy"]:
+        print("autonomy       : %s  (%s)" % (
+            info["autonomy"],
+            "commit/push/reinstall without asking unless a rule conflicts"
+            if info["autonomy"] == "auto" else "always ask before the sync loop"))
     print("source url     : %s  (%s)" % (info["source_url"], info["source_type"]))
     print("ref            : %s" % (info["ref"] or "(default branch)"))
     if info["pinned_ref"]:
