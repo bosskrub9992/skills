@@ -11,9 +11,9 @@ scopes**. There is no "the" skills repo. Everything here keys off two questions:
 > **Which source does this skill come from, and what is that source's policy?**
 > **Which scope is it installed at — project or global?**
 
-Answer them first, then read that policy's file — SKILL.md plus one policy file
-is the whole context you need. Never edit an installed folder as a way of
-changing a skill: the installed tree is a *build output*.
+Answer them first, then read that policy's file; it points to the other
+references at the steps that need them. Never edit an installed folder as a way
+of changing a skill: the installed tree is a *build output*.
 
 Authoring *content* (frontmatter, structure, quality bar) belongs to a
 skill-authoring skill if one is installed. This skill owns the repos, the CLI,
@@ -81,8 +81,8 @@ python3 <skill-dir>/scripts/skill_origin.py <name>
 ```
 
 It prints the scope, the source, its policy, the pinned ref, the clone path,
-and whether the install is edited or stale. Then open the policy file below and
-follow its flow.
+and whether the install matches the default branch (`CLEAN`) or `DIFFERS` from
+it. Then open the policy file below and follow its flow.
 
 If the skill is **not** in a lock file it was not installed by the CLI. It is
 either an **orphan** (delete it, or install it properly — no update will ever
@@ -176,8 +176,7 @@ disposable — the next update of that skill overwrites it — and a
 python3 <skill-dir>/scripts/skill_origin.py --all
 ```
 
-Read-only. One line per installed skill with its scope and state (`ok`,
-`differs`, `deleted` with a rename hint, `moved`, `pinned-ref`), then name
+Read-only. One line per installed skill with its scope and state, then name
 collisions, orphans and externally-managed skills. It reports; you decide; the
 `skills` CLI does the work. What each state means and how to act:
 **`references/health.md`**.

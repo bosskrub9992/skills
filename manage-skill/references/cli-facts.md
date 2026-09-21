@@ -88,7 +88,7 @@ When the CLI detects it is being run by a coding agent it prints
 
 *Why it matters:* renamed skills stay installed under their old names next to
 their successors, with both descriptions competing for routing. Nothing
-self-heals; `skill_origin.py --all` exists because of this.
+self-heals; `skill_origin.py --all` is how you find them.
 
 ## Branch installs: only the `#branch` suffix works
 
