@@ -7,6 +7,7 @@ Personal agent skills, installable with the [`skills` CLI](https://github.com/ve
 | Skill | Description |
 |-------|-------------|
 | `manage-skill` | Manage every installed skill across all source repos, at project and global scope — routing by source, four policies (`read-only` / `direct-push` / `branch-then-review` / `externally-managed`), a per-user config, a read-only health report and a local preview |
+| `orchestrator-mode` | Turn the agent into an orchestrator that delegates every task to supervised workers in isolated treehouse worktrees — self-contained briefs, a per-class model/effort matrix, Orca or subagent backend, opt-in code review, and no landing without the user's word |
 
 ## Install
 

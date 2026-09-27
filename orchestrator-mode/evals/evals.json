@@ -1,0 +1,64 @@
+{
+  "skill_name": "orchestrator-mode",
+  "note": "Dry-run evals: the agent has read SKILL.md + references and is told the user invoked /orchestrator-mode with the prompt. It must write the exact files and commands it would produce (brief, spec extraction, worker-start, wait, settlement) WITHOUT executing any orca/treehouse/Agent spawn. Assertions check the gates the skill enforces. The live smoke test (brief 900-smoke-scout) covers real execution.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "ship-with-review",
+      "prompt": "/orchestrator-mode — add server-side pagination to the item list in app-backend + app-frontend, and review it before I look",
+      "expected_output": "Start-of-mode probe (orca status capability + ORCA_TERMINAL_HANDLE, both config files, treehouse status per subrepo), class ship with review: true, a brief with frontmatter + Contract (5 fields + binding Brief line, absolute paths) + Workspace (idempotent treehouse lease keyed by task id, never return) + Reporting, awk Contract extraction into task-create, worker-start --worktree current --agent claude --model claude-opus-5-5 --effort high, background check --wait 540000, then a review-code brief on claude-fable-5-1 high after worker_done, release of the ship worker, no code written by the orchestrator.",
+      "assertions": [
+        "probe-first: runs orca status --json and checks orchestration.worker-launch-preferences.v1 + ORCA_TERMINAL_HANDLE before any dispatch",
+        "config-loaded: reads ~/.config/orchestrator-mode/config.json and .claude/orchestrator-mode.md and states the matrix row used",
+        "brief-contract: brief has the five Contract fields plus a Brief line that says to read and follow the brief in full; all paths absolute",
+        "lease-idempotent: Workspace section checks treehouse status for holder = task id before treehouse get --lease --lease-holder <id> -b <id>; forbids treehouse return",
+        "spec-derived: spec comes from awk '/^## /{f=($0==\"## Contract\")} f' on the brief, not hand-written",
+        "explicit-model-effort: worker-start passes --model claude-opus-5-5 --effort high explicitly and names the worker <class>-<slug>-opus55-high",
+        "review-is-separate-task: review-code is a second brief/task on claude-fable-5-1 high dispatched after worker_done; orchestrator does not review the diff itself",
+        "no-self-implementation: the orchestrator writes no code and runs no build/test",
+        "settlement: after worker_done validates task+dispatch ids, releases (or reuses/retains) before ack"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "scout-no-review",
+      "prompt": "/orchestrator-mode — find out why the event SSE stream sometimes drops when three browser tabs are open",
+      "expected_output": "Class scout, brief with report path under .scratch/orchestrator/reports/<id>.md, worker on claude-opus-5-5 high, Reporting section tells the scout to write findings to the report and pass --report-path, no PR, findings surfaced to the user as plain conclusions.",
+      "assertions": [
+        "class-scout: classified as scout with a report deliverable, no PR",
+        "report-path: brief tells the worker to write <workspace>/.scratch/orchestrator/reports/<id>.md and pass --report-path on worker_done",
+        "matrix-scout-row: --model claude-opus-5-5 --effort high",
+        "outcome-language: plan says findings are reported as conclusions, never worker output verbatim"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "thai-ship-unreviewed",
+      "prompt": "/orchestrator-mode — ทำ issue 52 ของ acme/app ต่อเลย",
+      "expected_output": "Resolves the issue via gh -R acme/app, class ship, review false, states explicitly that the PR will go to the user unreviewed, treehouse lease sequence in the brief, worker on claude-opus-5-5 high, landed = PR merged before any treehouse return.",
+      "assertions": [
+        "issue-resolved-via-gh: uses gh ... -R acme/app to read the issue for the brief",
+        "unreviewed-stated: says the deliverable goes to the user unreviewed because review was not requested",
+        "landed-definition: treehouse return only after PR state MERGED and porcelain clean, with --if-lease-holder <id> --force",
+        "decision-escalation: a worker ask that is a decision is forwarded to the user with pending_question recorded, not answered by the orchestrator"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "fallback-no-orca",
+      "prompt": "/orchestrator-mode — Orca is not installed on this machine. Add a CSV export button to the orders page, and review it.",
+      "expected_output": "Announces the subagent fallback once with its limits, Agent tool general-purpose with model opus (alias of claude-opus-5-5), description ship-<slug>-opus-<effort>, no isolation parameter, treehouse lease via the brief, review-code downgraded from Fable to opus with the downgrade stated, brief status field as queue.",
+      "assertions": [
+        "fallback-announced: states once that the subagent backend is used and lists its limits",
+        "alias-mapping: Agent model is opus (mapped from claude-opus-5-5), never fable or haiku",
+        "review-downgrade-stated: review-code runs on opus and the downgrade from claude-fable-5-1 is stated to the user",
+        "no-isolation-param: does not pass isolation: worktree; isolation comes from the brief's treehouse lease",
+        "status-queue: brief frontmatter status is set to running on spawn and used for reconcile"
+      ],
+      "files": []
+    }
+  ]
+}
