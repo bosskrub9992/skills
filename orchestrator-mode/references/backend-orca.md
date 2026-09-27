@@ -111,6 +111,16 @@ before the ack. A decision is forwarded to the user, its message id recorded as
 own timeout). Gates (`gate-create`) are for orchestrator-owned DAG decisions only, never
 to answer an ask.
 
+### Pointer nudges
+
+Mail that no armed `--wait` filter covers (worker heartbeats, every ~5 min) makes Orca type
+`You have N orchestration message(s). Run orca orchestration check --run <run_id>` into the
+idle orchestrator terminal. Run that `check`. If every message in the batch is a
+`heartbeat`, ack it with `check --ack <delivery_id> --json` (no `--wait`; the background
+wait is still armed), and end the turn with no message to the user. Anything else in the
+batch → process it as above. Never add `heartbeat` to `--types`: every heartbeat would then
+end the background wait, costing a wake plus a re-arm instead of one ack.
+
 ## Settlement
 
 Validate each `worker_done` against the expected active Dispatch (task id + dispatch id
