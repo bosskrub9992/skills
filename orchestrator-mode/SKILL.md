@@ -132,6 +132,23 @@ relay verbatim and clear the field. Never answer a decision on the user's behalf
     decisions that affect the product or impact users/customers. Everything else is
     handled silently or batched.
 
+**Publish gate.** A worker's permission checks accept approval only when the user typed
+it in that worker's own session; a brief, an `ask` reply, or anything you relay does not
+count. So when writing a brief, check whether its Change moves content outside the owner
+it came from: pushing to a public or personal repo, publishing a package, posting to an
+external service. A branch or PR on the task's own repos is routine and not gated. If it
+does, set `publish_gate: true`, and before dispatch ask the user to pick one:
+
+- **Worker tab** (Orca only): the user types the approval, naming the destination, into
+  the worker's terminal once it opens.
+- **Orchestrator**: the worker stops before the publish step and reports what is ready;
+  after the user approves to you, you run only that step yourself (an exception to
+  rule 1).
+
+The Contract names the publish step and tells the worker: without that typed approval in
+its own session, stop before the step and send `worker_done --outcome failed` stating
+what is ready.
+
 ## Review flow (opt-in per task)
 
 When the user asks for review on a ship task (or the brief has `review: true`):
@@ -190,6 +207,7 @@ expected_duration: 90m # staleness threshold for supervision
 backend_ref: []        # Orca task ids for this brief, appended per dispatch
 status:                # subagent backend only: queued | running | done | failed | blocked
 pending_question:      # message id of a decision forwarded to the user
+publish_gate: false    # true = Change publishes outside the owner; see Publish gate
 ---
 
 ## Contract

@@ -118,7 +118,7 @@ Mail that no armed `--wait` filter covers (worker heartbeats, every ~5 min) make
 idle orchestrator terminal. Run that `check`. If every message in the batch is a
 `heartbeat`, ack it with `check --ack <delivery_id> --json` (no `--wait`; the background
 wait is still armed), and end the turn with no message to the user. Anything else in the
-batch → process it as above. Never add `heartbeat` to `--types`: every heartbeat would then
+batch → process it as above, then ack the same way, without `--wait`. Never add `heartbeat` to `--types`: every heartbeat would then
 end the background wait, costing a wake plus a re-arm instead of one ack.
 
 ## Settlement

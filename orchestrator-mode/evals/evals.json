@@ -16,7 +16,8 @@
         "explicit-model-effort: worker-start passes --model claude-opus-5-5 --effort high explicitly and names the worker <class>-<slug>-opus55-high",
         "review-is-separate-task: review-code is a second brief/task on claude-fable-5-1 high dispatched after worker_done; orchestrator does not review the diff itself",
         "no-self-implementation: the orchestrator writes no code and runs no build/test",
-        "settlement: after worker_done validates task+dispatch ids, releases (or reuses/retains) before ack"
+        "settlement: after worker_done validates task+dispatch ids, releases (or reuses/retains) before ack",
+        "no-publish-gate: a PR to the task's own repos gets publish_gate false and no approval question"
       ],
       "files": []
     },
@@ -57,6 +58,48 @@
         "review-downgrade-stated: review-code runs on opus and the downgrade from claude-fable-5-1 is stated to the user",
         "no-isolation-param: does not pass isolation: worktree; isolation comes from the brief's treehouse lease",
         "status-queue: brief frontmatter status is set to running on spawn and used for reconcile"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "nudge-heartbeat-only",
+      "prompt": "/orchestrator-mode is already active on the Orca backend, bound to run run_abc123. Ship task 051-export has one running worker, and a background `orca orchestration check --wait --types \"worker_done,escalation,question\" --timeout-ms 540000 --json` is armed. You were idle. The terminal now shows: \"You have 1 orchestration message. Run `orca orchestration check --run run_abc123`.\" That check returns deliveryId delivery_x1 with one message: type heartbeat, subject alive, payload {\"taskId\":\"task_051\",\"dispatchId\":\"ctx_051\",\"phase\":\"implementing\"}. Write every command you run and every message you send to the user from here until your turn ends.",
+      "expected_output": "Runs the check, sees a heartbeat-only batch, acks with check --ack delivery_x1 --json without --wait, starts no second background wait, and ends the turn with no message to the user.",
+      "assertions": [
+        "check-run: runs orca orchestration check --run run_abc123 --json",
+        "ack-no-wait: acks with check --ack delivery_x1 and no --wait",
+        "no-rearm: starts no new background check --wait, because the armed one is still waiting",
+        "silent: sends no message to the user",
+        "types-unchanged: does not add heartbeat to --types anywhere"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "nudge-mixed-batch",
+      "prompt": "/orchestrator-mode is already active on the Orca backend, bound to run run_abc123. Ship task 051-export has one running worker, and a background `orca orchestration check --wait --types \"worker_done,escalation,question\" --timeout-ms 540000 --json` is armed. You were idle. The terminal now shows: \"You have 2 orchestration messages. Run `orca orchestration check --run run_abc123`.\" That check returns deliveryId delivery_x2 with two messages: (1) type heartbeat from the 051 worker; (2) id msg_q7, type question from the 051 worker: \"The export can include cancelled orders or skip them. Which should it do?\" Nothing in the brief or on disk settles it. Write every command you run and every message you send to the user from here until your turn ends.",
+      "expected_output": "Does not treat the batch as heartbeat-only: forwards the cancelled-orders decision to the user, records pending_question: msg_q7 in the 051 brief, then acks delivery_x2.",
+      "assertions": [
+        "not-silent: tells the user about the open decision instead of ending silently",
+        "decision-forwarded: forwards the question as the user's decision and does not answer it",
+        "pending-recorded: sets pending_question: msg_q7 in the 051-export brief frontmatter",
+        "ack-after-processing: acks delivery_x2 only after recording the question",
+        "single-wait: acks without --wait and neither stops nor re-arms the background wait, which is still armed"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "publish-gate",
+      "prompt": "/orchestrator-mode — move the deploy-helper skill from our company repo acme/internal-skills into my public personal repo octocat/skills, renaming acme to example and internal hostnames to example.com, and push it to main. Both repos are cloned in the workspace (internal-skills/, skills/), each with a treehouse.toml pool.",
+      "expected_output": "Detects that the Change publishes company content to a public repo, writes the brief with publish_gate: true, and before any worker-start asks the user to choose between typing approval in the worker tab and having the orchestrator run the publish step after approval, explaining that relayed approval does not count. The Contract names the push as the publish step and tells the worker to stop and report failed without typed approval in its own session.",
+      "assertions": [
+        "gate-detected: brief frontmatter has publish_gate: true",
+        "asks-before-dispatch: asks the user to pick worker tab or orchestrator before any worker-start",
+        "reason-stated: explains that approval relayed by the orchestrator does not satisfy the worker's permission checks",
+        "contract-stop: Contract names the push to octocat/skills as the publish step and says to stop and send worker_done --outcome failed without typed approval in the worker's own session",
+        "no-self-publish-yet: the orchestrator runs no push itself before the user chooses and approves"
       ],
       "files": []
     }
