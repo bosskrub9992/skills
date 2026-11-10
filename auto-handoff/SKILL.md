@@ -16,6 +16,10 @@ Write a handoff document to this session's fixed path. After the conversation
 is compacted, a hook puts the document into the new context. T3 Code compacts
 right away; every other host waits for auto-compact.
 
+Relative paths below start from the folder that holds this SKILL.md; the hook
+reminder names it. If a file is not there, report that instead of skipping the
+handoff.
+
 ## 0. Pick the host
 
 Check `T3CODE_THREAD_ID`, then read only the file for this host. It says when

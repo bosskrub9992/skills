@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 HOOK = Path(__file__).resolve().parent.parent / "hooks" / "suggest-handoff.py"
+SKILL_MD = HOOK.parent.parent / "SKILL.md"
 WINDOW = 1000
 SESSION = "s1"
 
@@ -91,6 +92,13 @@ class SuggestHandoffTest(unittest.TestCase):
         self.assertIn("30%", msg)
         self.assertIn("hook-started", msg)
         self.assertIn(str(self.doc), msg)
+        self.assertIn(str(SKILL_MD), msg)
+
+    def test_refresh_reminder_names_the_skill_file(self):
+        self.run_hook(30)
+        self.write_doc(1000)
+        self.run_hook(31)
+        self.assertIn(str(SKILL_MD), self.run_hook(34))
 
     def test_silent_for_subagent_tool_calls(self):
         self.assertIsNone(self.run_hook(30, event="PostToolUse", agent_id="a1"))

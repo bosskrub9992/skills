@@ -16,7 +16,8 @@ and go in `settings.json`.
   `AUTO_HANDOFF_CONTEXT_WINDOW` or `CLAUDE_CODE_MAX_CONTEXT_TOKENS`.
   - At the threshold (`AUTO_HANDOFF_THRESHOLD_PCT`, default 30) with no
     document written since the last compact, it sends the handoff reminder,
-    then again after every further 10 points.
+    then again after every further 10 points. Every reminder names this
+    skill's installed `SKILL.md`, so the agent never guesses a stale path.
   - Once the document is written, it asks for a rewrite after every further
     `AUTO_HANDOFF_REFRESH_STEP_PCT` points (default 3) since the last write.
   - It stays silent for subagents' tool calls, which carry the parent's

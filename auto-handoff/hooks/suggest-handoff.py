@@ -9,6 +9,14 @@ REFRESH_STEP_PCT = float(os.environ.get("AUTO_HANDOFF_REFRESH_STEP_PCT", "3"))
 RENAG_STEP_PCT = 10
 COMPACT_DROP_PCT = 5
 TAIL_CHUNK = 256 * 1024
+SKILL_MD = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "SKILL.md"
+)
+SKILL_HINT = (
+    f"The skill is installed at {SKILL_MD}; load it with the Skill tool "
+    "(auto-handoff) or read that file, and resolve its relative paths from "
+    "that folder, not from a path remembered earlier in this session."
+)
 
 WINDOW_OVERRIDE = os.environ.get(
     "AUTO_HANDOFF_CONTEXT_WINDOW"
@@ -113,7 +121,7 @@ def reminder(state, pct, doc):
             f"context. The handoff document at {doc} was last written at "
             f"{doc_pct:.0f}%. Rewrite it now by step 3 of the auto-handoff "
             "skill, at the same path with the current state, then go on with "
-            "the work."
+            f"the work. {SKILL_HINT}"
         )
 
     nag_pct = state.get("nag_pct")
@@ -124,7 +132,7 @@ def reminder(state, pct, doc):
         f"[auto-handoff hook] This session has used {pct:.0f}% of its context. "
         "Run the auto-handoff skill on all pending work as a hook-started "
         "handoff; the host file it points you to says when. Handoff "
-        f"document path: {doc}"
+        f"document path: {doc}. {SKILL_HINT}"
     )
 
 
